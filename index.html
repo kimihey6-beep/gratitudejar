@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Gratitude Jar — for Fadhlin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg1:#fff7fb; --bg2:#ffe9f6; --card:#ffffff;
+      --ink:#17181c; --muted:#6c6f7b;
+      --pink:#ff4fa0; --pink-soft:#ff86bf;
+      --purple:#9b5de5; --purple-deep:#7b3ad7;
+      --chip:#f6f3ff; --chip-b:#eadfff;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      font-family:Quicksand, system-ui, Segoe UI, Arial, sans-serif;
+      background:radial-gradient(80% 80% at 50% 20%, var(--bg2), var(--bg1));
+      color:var(--ink); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    }
+    .wrap{position:fixed; inset:0; display:grid; place-items:center; padding:16px}
+    .card{
+      width:min(920px,95vw); height:min(720px,92vh);
+      background:var(--card); border-radius:22px;
+      box-shadow:0 18px 44px rgba(0,0,0,.12); overflow:hidden;
+      display:grid; grid-template-rows:auto auto auto 1fr auto;
+    }
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:14px 16px; border-bottom:1px solid #0000000d;
+    }
+    .title{
+      display:flex; gap:10px; align-items:baseline; margin:0;
+      font-size:clamp(20px,5.2vw,30px); font-weight:800; color:var(--pink);
+      text-shadow:0 0 18px rgba(255,79,160,.18);
+      font-family:"Dancing Script", cursive;
+    }
+    .meta{display:flex; gap:10px; flex-wrap:wrap}
+    .pill{border:1px solid #00000012; border-radius:999px; padding:6px 10px; font-weight:700; font-size:13px; background:#fafafb}
+    .pill b{color:var(--purple-deep)}
+
+    .goal{ padding:8px 16px; display:flex; gap:8px; align-items:center; border-bottom:1px solid #0000000d }
+    .progress{
+      height:10px; flex:1; background:#f2f2f7; border-radius:999px; overflow:hidden;
+    }
+    .bar{height:100%; width:0%; background:linear-gradient(90deg, var(--pink-soft), var(--pink));
+      transition:width .4s ease}
+
+    .controls{ padding:10px 16px; display:grid; grid-template-columns:1fr auto; gap:10px; border-bottom:1px solid #0000000d }
+    .input{
+      display:flex; gap:8px; align-items:center; background:#fff; border:1px solid #00000012;
+      border-radius:14px; padding:8px 10px;
+    }
+    input[type="text"]{
+      flex:1; border:none; outline:none; font-size:15px; padding:6px 6px;
+    }
+    .btn{
+      appearance:none; border:none; cursor:pointer; font-weight:800; font-size:14px;
+      padding:10px 14px; border-radius:12px;
+      background:linear-gradient(180deg,#ff8ec4,#ff5ea8); color:#fff;
+      box-shadow:0 10px 20px rgba(255,94,168,.25);
+    }
+    .btn.secondary{ background:#fff; color:#ff5ea8; border:2px solid #ff5ea8; box-shadow:none }
+
+    .suggest{ padding:8px 16px; display:flex; gap:8px; flex-wrap:wrap; }
+    .chip{
+      background:var(--chip); border:1px solid var(--chip-b); color:#3a2c69;
+      padding:6px 10px; border-radius:999px; font-weight:700; font-size:12px; cursor:pointer;
+    }
+
+    .toolbar{ padding:8px 16px; display:flex; gap:8px; align-items:center; border-top:1px solid #00000006; border-bottom:1px solid #0000000d }
+    .search{ flex:1; display:flex; gap:8px; align-items:center; border:1px solid #00000012; border-radius:12px; padding:8px 10px; background:#fff }
+    .search input{ flex:1; border:none; outline:none; font-size:14px }
+    .toolbar .btn.small{ padding:8px 12px; font-size:13px; border-radius:10px }
+
+    .list{ overflow:auto; padding:12px 14px 18px; }
+    .empty{ text-align:center; color:#777; margin-top:12px }
+    .item{
+      display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:center;
+      border:1px solid #00000010; background:#fff; border-radius:14px; padding:10px 12px; margin-bottom:10px;
+      box-shadow:0 4px 12px rgba(0,0,0,.04)
+    }
+    .star{ cursor:pointer; font-size:18px; color:#c8c8cf }
+    .star.on{ color:#f7b801 }
+    .text{ font-size:15px; line-height:1.35 }
+    .date{ font-size:12px; color:#7a7a7a }
+    .actions{ display:flex; gap:6px }
+    .iconbtn{
+      appearance:none; border:none; background:#f7f7fb; border:1px solid #00000010; color:#333; border-radius:10px;
+      padding:6px 8px; cursor:pointer; font-weight:700; font-size:12px
+    }
+    .iconbtn:active{ transform:translateY(1px) }
+
+    footer{ padding:10px 16px; display:flex; gap:8px; justify-content:center; color:#6a6a6a; font-size:12px }
+
+    @media (max-width:560px){
+      .card{border-radius:18px}
+      .item{ grid-template-columns:auto 1fr auto }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <h1 class="title">Gratitude Jar</h1>
+        <div class="meta">
+          <div class="pill">Today: <b id="todayCount">0</b>/3</div>
+          <div class="pill">Streak: <b id="streak">0</b> days</div>
+        </div>
+      </header>
+
+      <div class="goal">
+        <div style="font-weight:800; font-size:13px; min-width:88px">Target: 3/day</div>
+        <div class="progress"><div class="bar" id="bar"></div></div>
+      </div>
+
+      <div class="controls">
+        <div class="input">
+          <input id="entry" type="text" placeholder="Contoh: Murid senyum bila faham topik hari ini 😊">
+          <button class="btn" id="addBtn">+ Add</button>
+        </div>
+        <button class="btn secondary" id="exportBtn">Export .txt</button>
+      </div>
+
+      <div class="suggest" id="chips"></div>
+
+      <div class="toolbar">
+        <div class="search">
+          <span>🔎</span>
+          <input id="q" placeholder="Cari nota (perkataan atau tarikh)…">
+        </div>
+        <button class="btn small" id="showAll">All</button>
+        <button class="btn small" id="showFav">★ Favs</button>
+        <button class="btn small" id="clearToday">Clear Today</button>
+      </div>
+
+      <div class="list" id="list">
+        <div class="empty">Belum ada nota. Tulis satu perkara kecil yang buat hati rasa syukur 💗</div>
+      </div>
+
+      <footer>Disimpan di peranti ini (localStorage). Selamat untuk iPhone. — by you 💫</footer>
+    </div>
+  </div>
+
+  <script>
+    // ===== Utilities
+    const $ = sel => document.querySelector(sel);
+    const listEl = $('#list'), entryEl = $('#entry'), barEl = $('#bar');
+    const todayCountEl = $('#todayCount'), streakEl = $('#streak');
+
+    const KEY = 'gratitudeJarEntries:v1';
+    const KEY_STREAK = 'gratitudeJarStreak:v1';
+    const KEY_LASTDAY = 'gratitudeJarLastDay:v1';
+
+    const SUGGEST = [
+      "Seorang pelajar cuba lagi walau salah kali pertama",
+      "Dapat minum air cukup hari ini",
+      "Langit senja cantik sangat",
+      "Ada kawan tanya khabar",
+      "Makan sedap walau simple",
+      "Ada masa 5 minit tarik nafas tenang",
+      "Murid ucap terima kasih",
+      "Dapat senyum tanpa sebab besar",
+      "Kerja siap on time",
+      "Dapat rehat sekejap"
+    ];
+
+    function todayStr(d=new Date()){ return d.toISOString().slice(0,10) } // YYYY-MM-DD
+    function fmtDateISO(s){ const d = new Date(s); return d.toLocaleDateString(undefined,{weekday:'short', day:'2-digit', month:'short', year:'numeric'}) }
+
+    // ===== State
+    let entries = load(KEY) || [];
+    let filterFav = false, q = '';
+
+    function load(k){ try{ return JSON.parse(localStorage.getItem(k)||'null') }catch(e){ return null } }
+    function save(k,v){ localStorage.setItem(k, JSON.stringify(v)) }
+
+    // ===== Chips
+    const chipsEl = $('#chips');
+    SUGGEST.forEach(t=>{
+      const c = document.createElement('button');
+      c.className='chip'; c.textContent = t;
+      c.addEventListener('click', ()=>{ entryEl.value = t; entryEl.focus() });
+      chipsEl.appendChild(c);
+    });
+
+    // ===== Render
+    function render(){
+      // Filter
+      const today = todayStr();
+      const filtered = entries
+        .filter(e => (!filterFav || e.fav))
+        .filter(e => !q || e.text.toLowerCase().includes(q) || e.date.includes(q));
+
+      // Sort newest first
+      filtered.sort((a,b)=> b.created - a.created);
+
+      listEl.innerHTML = '';
+      if(!filtered.length){
+        const d = document.createElement('div');
+        d.className='empty';
+        d.textContent = 'Tiada nota untuk dipaparkan.';
+        listEl.appendChild(d);
+      }else{
+        for(const e of filtered){
+          const row = document.createElement('div');
+          row.className = 'item';
+
+          const star = document.createElement('button');
+          star.className = 'star' + (e.fav?' on':'');
+          star.innerHTML = '★';
+          star.title = 'Favourite';
+          star.addEventListener('click', ()=>{ e.fav=!e.fav; save(KEY, entries); render(); });
+
+          const main = document.createElement('div');
+          const txt = document.createElement('div');
+          txt.className='text';
+          txt.textContent = e.text;
+          const date = document.createElement('div');
+          date.className='date';
+          date.textContent = (e.date===today?'Today — ':'') + fmtDateISO(e.date);
+          main.appendChild(txt); main.appendChild(date);
+
+          const acts = document.createElement('div');
+          acts.className='actions';
+          const editBtn = document.createElement('button');
+          editBtn.className='iconbtn'; editBtn.textContent='Edit';
+          editBtn.addEventListener('click', ()=>{
+            const nv = prompt('Edit nota:', e.text);
+            if(nv && nv.trim()){ e.text = nv.trim(); save(KEY, entries); render(); }
+          });
+          const delBtn = document.createElement('button');
+          delBtn.className='iconbtn'; delBtn.textContent='🗑️';
+          delBtn.title='Delete';
+          delBtn.addEventListener('click', ()=>{
+            if(confirm('Padam nota ini?')){ entries = entries.filter(x=>x.id!==e.id); save(KEY,entries); render(); updateTodayAndStreak() }
+          });
+          acts.appendChild(editBtn); acts.appendChild(delBtn);
+
+          row.appendChild(star); row.appendChild(main); row.appendChild(acts);
+          listEl.appendChild(row);
+        }
+      }
+      updateTodayAndStreak();
+    }
+
+    function updateTodayAndStreak(){
+      const today = todayStr();
+      const todayCount = entries.filter(e=>e.date===today).length;
+      todayCountEl.textContent = todayCount;
+      barEl.style.width = Math.min(100, (todayCount/3)*100) + '%';
+      // streak
+      let streak = load(KEY_STREAK) || 0;
+      const lastDay = load(KEY_LASTDAY) || null;
+      const todayDay = new Date(today+'T00:00:00');
+      if(entries.some(e=>e.date===today)){
+        // if first time we hit today, update streak based on lastDay
+        if(lastDay !== today){
+          if(lastDay){
+            const diff = (todayDay - new Date(lastDay+'T00:00:00')) / (86400000);
+            if(diff === 1) streak += 1; // continued
+            else if(diff > 1) streak = 1; // reset to 1 (new streak)
+          } else {
+            streak = 1;
+          }
+          save(KEY_STREAK, streak);
+          save(KEY_LASTDAY, today);
+        }
+      }
+      $('#streak').textContent = streak;
+    }
+
+    // ===== Add / export
+    function addEntry(text){
+      const t = text.trim();
+      if(!t) return;
+      const now = Date.now();
+      entries.push({ id: 'e'+now+Math.random().toString(36).slice(2,6), text: t, date: todayStr(), created: now, fav:false });
+      save(KEY, entries);
+      entryEl.value = '';
+      render();
+      pulseGoal();
+      celebrateIfMilestone();
+    }
+
+    function pulseGoal(){
+      barEl.style.transform='scaleY(1.2)';
+      setTimeout(()=> barEl.style.transform='scaleY(1)', 180);
+    }
+
+    function celebrateIfMilestone(){
+      const today = todayStr();
+      const c = entries.filter(e=>e.date===today).length;
+      if([1,3,5].includes(c)){ confettiBurst(); }
+    }
+
+    function exportTxt(){
+      const lines = entries
+        .sort((a,b)=> a.created - b.created)
+        .map(e=> `[${e.date}] ${e.text}${e.fav?' ★':''}`);
+      const blob = new Blob([lines.join('\n')], {type:'text/plain;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'gratitude_jar.txt';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    }
+
+    // ===== Events
+    $('#addBtn').addEventListener('click', ()=> addEntry(entryEl.value));
+    entryEl.addEventListener('keydown', e=>{ if(e.key==='Enter') addEntry(entryEl.value) });
+    $('#exportBtn').addEventListener('click', exportTxt);
+    $('#q').addEventListener('input', e=>{ q = e.target.value.trim().toLowerCase(); render() });
+    $('#showFav').addEventListener('click', ()=>{ filterFav=true; render() });
+    $('#showAll').addEventListener('click', ()=>{ filterFav=false; render() });
+    $('#clearToday').addEventListener('click', ()=>{
+      const t = todayStr();
+      if(confirm('Padam semua nota hari ini?')){
+        entries = entries.filter(e=>e.date!==t);
+        save(KEY, entries);
+        render();
+      }
+    });
+
+    // ===== Confetti mini (canvas overlay)
+    const conf = document.createElement('canvas');
+    conf.id='cfx'; conf.style.position='fixed'; conf.style.inset='0'; conf.style.pointerEvents='none';
+    document.body.appendChild(conf);
+    const cctx = conf.getContext('2d'); let cfx = [];
+    function resizeC(){ conf.width=innerWidth; conf.height=innerHeight }
+    addEventListener('resize', resizeC); resizeC();
+    function confettiBurst(n=160){
+      for(let i=0;i<n;i++){
+        cfx.push({
+          x: innerWidth/2, y: 90, // near header
+          vx: (Math.random()*2-1)*280, vy: -Math.random()*320-120,
+          g: 900, life: 0.9+Math.random()*0.7, age:0,
+          s: 2+Math.random()*3,
+          col: ['#ff4fa0','#9b5de5','#ff9f1a','#15b67d'][Math.floor(Math.random()*4)]
+        });
+      }
+      if(!confLoopRunning) confLoop();
+    }
+    let confLoopRunning=false, last=performance.now();
+    function confLoop(now=performance.now()){
+      confLoopRunning=true;
+      const dt = Math.min(0.05, (now-last)/1000); last=now;
+      cctx.clearRect(0,0,conf.width,conf.height);
+      for(let i=cfx.length-1;i>=0;i--){
+        const p=cfx[i];
+        p.age+=dt; if(p.age>p.life){ cfx.splice(i,1); continue }
+        p.vy += p.g*dt;
+        p.x += p.vx*dt; p.y += p.vy*dt;
+        cctx.globalAlpha = 1 - (p.age/p.life);
+        cctx.fillStyle=p.col;
+        cctx.fillRect(p.x, p.y, p.s, p.s*2);
+      }
+      cctx.globalAlpha=1;
+      if(cfx.length){ requestAnimationFrame(confLoop) } else { confLoopRunning=false }
+    }
+
+    // ===== Initial render
+    render();
+
+    // ===== Helpful defaults
+    // Auto-focus input (mobile-safe)
+    window.addEventListener('load', ()=> entryEl.focus(), {once:true});
+  </script>
+</body>
+</html>
