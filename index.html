@@ -12,7 +12,7 @@
       --bg1:#fff7fb; --bg2:#ffe9f6; --card:#ffffff;
       --ink:#17181c; --muted:#6c6f7b;
       --pink:#ff4fa0; --pink-soft:#ff86bf;
-      --purple:#9b5de5; --purple-deep:#7b3ad7;
+      --purple:#9b5de5; --purple-deep:#7b3ad7; --purple-soft:#c7b5ff;
       --chip:#f6f3ff; --chip-b:#eadfff;
     }
     *{box-sizing:border-box}
@@ -24,11 +24,29 @@
     }
     .wrap{position:fixed; inset:0; display:grid; place-items:center; padding:16px}
     .card{
+      position:relative;
       width:min(920px,95vw); height:min(720px,92vh);
       background:var(--card); border-radius:22px;
       box-shadow:0 18px 44px rgba(0,0,0,.12); overflow:hidden;
       display:grid; grid-template-rows:auto auto auto 1fr auto;
     }
+
+    /* ===== Nameplate di sebelah ===== */
+    .nameplate{
+      position:absolute; right:10px; top:50%; transform:translateY(-50%) rotate(-90deg);
+      transform-origin:center; z-index:3;
+      background:linear-gradient(180deg, #efe9ffcc, #ffffffcc);
+      border:1px solid #00000010; border-radius:12px;
+      padding:8px 14px; box-shadow:0 10px 22px rgba(0,0,0,.12), inset 0 0 0 1px #ffffff88;
+    }
+    .nameplate .who{
+      font-family:"Dancing Script", cursive; font-weight:700;
+      font-size:22px; line-height:1; color:var(--purple-soft);
+      text-shadow:0 0 18px color-mix(in oklab, var(--purple-soft) 40%, transparent);
+      white-space:nowrap;
+    }
+    .nameplate .sub{ font-size:11px; color:#7b6f9a; margin-left:8px }
+
     header{
       display:flex; align-items:center; justify-content:space-between; gap:10px;
       padding:14px 16px; border-bottom:1px solid #0000000d;
@@ -97,7 +115,15 @@
 
     footer{ padding:10px 16px; display:flex; gap:8px; justify-content:center; color:#6a6a6a; font-size:12px }
 
-    @media (max-width:560px){
+    /* Mobile: nameplate jadi badge atas kanan */
+    @media (max-width:700px){
+      .nameplate{
+        right:10px; top:10px; transform:none;
+        background:linear-gradient(180deg, #efe9ff, #ffffff);
+        padding:6px 10px; border-radius:999px;
+      }
+      .nameplate .who{ font-size:18px }
+      .nameplate .sub{ display:none }
       .card{border-radius:18px}
       .item{ grid-template-columns:auto 1fr auto }
     }
@@ -106,6 +132,11 @@
 <body>
   <div class="wrap">
     <div class="card">
+      <!-- Nameplate sebelah jar -->
+      <div class="nameplate" aria-label="Untuk Fadhlin">
+        <span class="who">Fadhlin 💜</span><span class="sub">gratitude jar</span>
+      </div>
+
       <header>
         <h1 class="title">Gratitude Jar</h1>
         <div class="meta">
@@ -143,7 +174,7 @@
         <div class="empty">Belum ada nota. Tulis satu perkara kecil yang buat hati rasa syukur 💗</div>
       </div>
 
-      <footer>Disimpan di peranti ini (localStorage). Selamat untuk iPhone. — by you 💫</footer>
+      <footer>Disimpan di peranti ini (localStorage). Sesuai untuk iPhone. — by you 💫</footer>
     </div>
   </div>
 
@@ -157,7 +188,9 @@
     const KEY_STREAK = 'gratitudeJarStreak:v1';
     const KEY_LASTDAY = 'gratitudeJarLastDay:v1';
 
+    // ===== Suggestions (termasuk "Dah chat Husni 💬")
     const SUGGEST = [
+      "Dah chat Husni 💬",
       "Seorang pelajar cuba lagi walau salah kali pertama",
       "Dapat minum air cukup hari ini",
       "Langit senja cantik sangat",
@@ -180,25 +213,28 @@
     function load(k){ try{ return JSON.parse(localStorage.getItem(k)||'null') }catch(e){ return null } }
     function save(k,v){ localStorage.setItem(k, JSON.stringify(v)) }
 
-    // ===== Chips
+    // ===== Chips (chip khas auto-tambah untuk Husni)
     const chipsEl = $('#chips');
     SUGGEST.forEach(t=>{
       const c = document.createElement('button');
       c.className='chip'; c.textContent = t;
-      c.addEventListener('click', ()=>{ entryEl.value = t; entryEl.focus() });
+      c.addEventListener('click', ()=>{
+        if (t.toLowerCase().includes('dah chat husni')) {
+          addEntry('Dah chat Husni 💬'); // auto tambah terus
+        } else {
+          entryEl.value = t; entryEl.focus();
+        }
+      });
       chipsEl.appendChild(c);
     });
 
     // ===== Render
     function render(){
-      // Filter
       const today = todayStr();
       const filtered = entries
         .filter(e => (!filterFav || e.fav))
-        .filter(e => !q || e.text.toLowerCase().includes(q) || e.date.includes(q));
-
-      // Sort newest first
-      filtered.sort((a,b)=> b.created - a.created);
+        .filter(e => !q || e.text.toLowerCase().includes(q) || e.date.includes(q))
+        .sort((a,b)=> b.created - a.created);
 
       listEl.innerHTML = '';
       if(!filtered.length){
@@ -259,12 +295,11 @@
       const lastDay = load(KEY_LASTDAY) || null;
       const todayDay = new Date(today+'T00:00:00');
       if(entries.some(e=>e.date===today)){
-        // if first time we hit today, update streak based on lastDay
         if(lastDay !== today){
           if(lastDay){
-            const diff = (todayDay - new Date(lastDay+'T00:00:00')) / (86400000);
-            if(diff === 1) streak += 1; // continued
-            else if(diff > 1) streak = 1; // reset to 1 (new streak)
+            const diff = (todayDay - new Date(lastDay+'T00:00:00')) / 86400000;
+            if(diff === 1) streak += 1;
+            else if(diff > 1) streak = 1;     // mula semula
           } else {
             streak = 1;
           }
@@ -337,7 +372,7 @@
     function confettiBurst(n=160){
       for(let i=0;i<n;i++){
         cfx.push({
-          x: innerWidth/2, y: 90, // near header
+          x: innerWidth/2, y: 90,
           vx: (Math.random()*2-1)*280, vy: -Math.random()*320-120,
           g: 900, life: 0.9+Math.random()*0.7, age:0,
           s: 2+Math.random()*3,
@@ -367,8 +402,7 @@
     // ===== Initial render
     render();
 
-    // ===== Helpful defaults
-    // Auto-focus input (mobile-safe)
+    // Autofocus input (mobile-safe)
     window.addEventListener('load', ()=> entryEl.focus(), {once:true});
   </script>
 </body>
